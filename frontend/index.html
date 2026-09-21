@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#121c38" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <title>Tracker — B.Tech Journey</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="side">
+        <div class="brand">
+          track<span>er</span><small>my b.tech journey</small>
+        </div>
+        <nav class="nav" id="nav">
+          <button class="active" data-view="dashboard">⌂ Dashboard</button
+          ><button data-view="tasks">✓ Daily tasks</button
+          ><button data-view="personal">♡ Personal space</button
+          ><button data-view="semester">▣ Semester goals</button
+          ><button data-view="skills">↗ Skills roadmap</button>
+        </nav>
+        <div class="quote">
+          <b>Small steps matter.</b>Show up today. Your future self is built
+          from ordinary days.
+        </div>
+      </aside>
+      <main class="main">
+        <header class="top">
+          <div>
+            <div class="eyebrow">Your growth, one day at a time</div>
+            <h1 id="heading">Dashboard</h1>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center">
+            <button class="text" id="export">Backup data</button
+            ><label class="text" style="cursor: pointer"
+              >Restore<input
+                id="import"
+                type="file"
+                accept="application/json"
+                hidden
+            /></label>
+            <div class="date" id="date"></div>
+          </div>
+        </header>
+        <section class="view active" id="dashboard">
+          <div class="grid hero">
+            <div class="card welcome">
+              <h2>Keep going, future engineer. ✨</h2>
+              <p class="sub">
+                Complete today’s priorities and protect your momentum.
+              </p>
+              <div class="progress"><i id="dailybar"></i></div>
+              <small id="dailytext"></small>
+            </div>
+            <div class="card">
+              <div class="head">
+                <div>
+                  <h2>Current streak</h2>
+                  <p class="sub">Days you showed up</p>
+                </div>
+                <span class="tag">Consistency</span>
+              </div>
+              <div class="streak">
+                <div class="flame">🔥</div>
+                <div class="number" id="streak">0</div>
+                <div class="sub">day streak</div>
+                <div class="week" id="week"></div>
+              </div>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <b id="done">0/0</b><small>tasks completed</small>
+            </div>
+            <div class="metric">
+              <b id="skillavg">0%</b><small>skill roadmap</small>
+            </div>
+            <div class="metric">
+              <b id="moodstat">—</b><small>today’s mood</small>
+            </div>
+          </div>
+          <div class="grid two">
+            <div class="card">
+              <div class="head">
+                <div>
+                  <h2>Today’s priorities</h2>
+                  <p class="sub">Do the important things first.</p>
+                </div>
+                <button class="link" data-go="tasks">Manage →</button>
+              </div>
+              <div id="dashlist" class="tasklist"></div>
+            </div>
+            <div class="card">
+              <div class="head">
+                <div>
+                  <h2>Quick reflection</h2>
+                  <p class="sub">A small note for future you.</p>
+                </div>
+                <button class="link" data-go="personal">Journal →</button>
+              </div>
+              <p
+                id="preview"
+                class="sub"
+                style="margin-top: 20px; white-space: pre-wrap"
+              >
+                No reflection yet. Write down one win, lesson, or thought.
+              </p>
+            </div>
+          </div>
+        </section>
+        <section class="view" id="tasks">
+          <div class="head">
+            <div>
+              <h2 style="font-size: 24px">Daily task tracker</h2>
+              <p class="sub">
+                Add your work for today. Tick it when it is genuinely done.
+              </p>
+            </div>
+          </div>
+          <div class="grid wide">
+            <div class="card">
+              <div class="head">
+                <h2>Your tasks</h2>
+                <span class="tag" id="taskcount"></span>
+              </div>
+              <div class="tasklist" id="tasklist"></div>
+              <form class="form" id="taskform">
+                <input
+                  required
+                  name="title"
+                  placeholder="Add a task, e.g. Complete DSA lecture"
+                /><select name="type">
+                  <option>College</option>
+                  <option>Personal</option>
+                  <option>Skill</option>
+                  <option>Health</option></select
+                ><input
+                  class="full"
+                  name="meta"
+                  placeholder="Optional: time or detail, e.g. 60 minutes"
+                /><button class="btn full">+ Add today’s task</button>
+              </form>
+            </div>
+            <div class="card">
+              <h2>A simple daily system</h2>
+              <p class="sub">
+                Choose 3–5 meaningful tasks. At night, review what worked and
+                move unfinished work deliberately — no guilt, just clarity.
+              </p>
+              <h2 style="margin-top: 22px">Focus rule</h2>
+              <p class="sub">
+                Your first completed task should be one that moves your B.Tech
+                goals forward.
+              </p>
+            </div>
+          </div>
+        </section>
+        <section class="view" id="personal">
+          <div class="head">
+            <div>
+              <h2 style="font-size: 24px">Personal space</h2>
+              <p class="sub">
+                Track your emotional wellbeing alongside your academic progress.
+              </p>
+            </div>
+          </div>
+          <div class="grid two">
+            <div class="card">
+              <h2>How are you feeling today?</h2>
+              <p class="sub">Pick the feeling that fits best right now.</p>
+              <div class="moods" id="moods">
+                <button class="mood" data-mood="Great">
+                  😄<small>Great</small></button
+                ><button class="mood" data-mood="Good">
+                  🙂<small>Good</small></button
+                ><button class="mood" data-mood="Okay">
+                  😐<small>Okay</small></button
+                ><button class="mood" data-mood="Low">
+                  😕<small>Low</small></button
+                ><button class="mood" data-mood="Stressed">
+                  😣<small>Stressed</small>
+                </button>
+              </div>
+              <div class="save">
+                <span id="moodsave">Choose a mood to save it.</span>
+              </div>
+            </div>
+            <div class="card">
+              <h2>Daily reflection</h2>
+              <p class="sub">What went well? What should tomorrow look like?</p>
+              <textarea
+                class="note"
+                id="journal"
+                placeholder="Today I learned…&#10;I am grateful for…&#10;Tomorrow I will…"
+              ></textarea>
+              <div class="save">
+                <span id="journalsave">Saved only on this device.</span
+                ><button class="btn" id="savejournal">Save reflection</button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="view" id="semester">
+          <div class="head">
+            <div>
+              <h2 style="font-size: 24px">Semester vision</h2>
+              <p class="sub">
+                Keep the big picture visible while you handle each day.
+              </p>
+            </div>
+          </div>
+          <div class="grid wide">
+            <div class="card">
+              <div class="head">
+                <h2>Semester checkpoints</h2>
+                <button class="link" id="addgoal">+ Add goal</button>
+              </div>
+              <div class="goalgrid" id="goals"></div>
+            </div>
+            <div class="card">
+              <div class="month">
+                <button id="prev">←</button>
+                <h2 id="month"></h2>
+                <button id="next">→</button>
+              </div>
+              <div class="cal" id="cal"></div>
+              <p class="sub" style="margin-top: 15px">
+                Green days represent task-completion days. Keep building the
+                chain.
+              </p>
+            </div>
+          </div>
+        </section>
+        <section class="view" id="skills">
+          <div class="head">
+            <div>
+              <h2 style="font-size: 24px">Skills roadmap</h2>
+              <p class="sub">
+                Your career growth, separate from college curriculum.
+              </p>
+            </div>
+          </div>
+          <div class="grid wide">
+            <div class="card">
+              <div class="head">
+                <div>
+                  <h2>What I’m learning</h2>
+                  <p class="sub">Choose skills that make you more capable.</p>
+                </div>
+                <button class="link" id="addskill">+ Add skill</button>
+              </div>
+              <div id="skillslist" class="skilllist"></div>
+            </div>
+            <div class="card">
+              <h2>Learning direction</h2>
+              <p class="sub">
+                A strong B.Tech profile is built from fundamentals plus proof of
+                work.
+              </p>
+              <h2 style="margin-top: 18px">1. Core foundation</h2>
+              <p class="sub">
+                DSA, one language deeply, Git and problem solving.
+              </p>
+              <h2 style="margin-top: 15px">2. Build things</h2>
+              <p class="sub">
+                Projects, deployment, collaboration and clear documentation.
+              </p>
+              <h2 style="margin-top: 15px">3. Explore your path</h2>
+              <p class="sub">
+                Web, AI/ML, cloud, cybersecurity or mobile — follow curiosity
+                with focused practice.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-storage-compat.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

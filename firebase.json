@@ -1,12 +1,12 @@
 {
   "firestore": {
-    "rules": "firestore.rules"
+    "rules": "database/firestore.rules"
   },
   "storage": {
-    "rules": "storage.rules"
+    "rules": "database/storage.rules"
   },
   "hosting": {
-    "public": ".",
+    "public": "frontend",
     "ignore": [
       "firebase.json",
       ".firebaserc",

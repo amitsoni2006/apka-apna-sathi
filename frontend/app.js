@@ -1,0 +1,1147 @@
+if (
+  location.protocol === "file:" &&
+  !location.search.includes("local-preview")
+) {
+  location.replace("https://amit-study-planner.web.app/");
+  throw new Error("Opening the protected live planner");
+}
+document.title = "APKA APNA SATHI";
+document.querySelector(".brand").innerHTML =
+  "APKA <span>APNA</span> SATHI<small>your daily planner</small>";
+document
+  .querySelector(".top > div:last-child")
+  .insertAdjacentHTML(
+    "afterbegin",
+    '<button class="btn" id="cloudLogin">☁ Cloud sync</button><span class="sub" id="cloudStatus" style="font-size:12px"></span>',
+  );
+const firebaseConfig = {
+  apiKey: "AIzaSyAR9Is0f6DeztaPlDvYy7yqj6ENnUHLPsQ",
+  authDomain: "amit-study-planner.firebaseapp.com",
+  projectId: "amit-study-planner",
+  storageBucket: "amit-study-planner.firebasestorage.app",
+  messagingSenderId: "713130959504",
+  appId: "1:713130959504:web:79cce339368aab52752e15",
+  measurementId: "G-W45JBXYXYK",
+};
+let cloudAuth,
+  cloudDb,
+  cloudStorage,
+  cloudUser,
+  lastCloudData = "";
+try {
+  firebase.initializeApp(firebaseConfig);
+  cloudAuth = firebase.auth();
+  cloudDb = firebase.firestore();
+  cloudStorage = firebase.storage();
+} catch (e) {
+  console.warn("Cloud setup unavailable", e);
+}
+document
+  .querySelector("#tasks .head div")
+  .insertAdjacentHTML(
+    "beforeend",
+    '<div class="task-date-controls"><button type="button" class="date-nav" id="previousTaskDate" aria-label="Previous day">‹</button><input id="taskDatePicker" type="date" aria-label="Choose task date"><button type="button" class="date-nav" id="nextTaskDate" aria-label="Next day">›</button><button type="button" class="date-today" id="todayTaskDate">Today</button></div><p class="sub" id="taskDate"></p>',
+  );
+document
+  .querySelector('[data-view="tasks"]')
+  .insertAdjacentHTML(
+    "afterend",
+    '<button data-view="leetcode">⌁ LeetCode</button>',
+  );
+document
+  .querySelector("#personal")
+  .insertAdjacentHTML(
+    "beforebegin",
+    '<section class="view" id="leetcode"><div class="head"><div><h2 style="font-size:24px">LeetCode consistency</h2><p class="sub">Every solved problem, its logic, and the exact time you made progress.</p></div><span class="tag" id="leetStreak">🔥 0 day streak</span></div><div class="grid wide"><div class="card"><div class="head"><h2>Solved questions</h2><span class="tag" id="leetCount">0 solved</span></div><div class="tasklist" id="leetList"></div></div><div class="card"><h2>Log a solved question</h2><p class="sub">The date and time are saved automatically when you add it.</p><form class="form" id="leetForm"><input required name="title" placeholder="Question name, e.g. Two Sum"><select name="difficulty"><option>Easy</option><option>Medium</option><option>Hard</option></select><input class="full" name="link" placeholder="Optional LeetCode link"><textarea class="full" required name="logic" placeholder="Write your logic: approach, key observation, time/space complexity…"></textarea><button class="btn full">+ Save solved question</button></form></div></div></section>',
+  );
+document
+  .querySelector("#leetList")
+  .insertAdjacentHTML(
+    "afterend",
+    '<div style="margin-top:22px"><div class="head"><h2>Monthly solve calendar</h2><span class="sub" id="leetMonth"></span></div><div class="cal" id="leetCalendar"></div><p class="sub" style="margin-top:12px">Each green square means you solved at least one LeetCode question that day.</p></div>',
+  );
+document
+  .querySelector('[data-view="skills"]')
+  .insertAdjacentHTML(
+    "afterend",
+    '<button data-view="files">▰ My files</button>',
+  );
+document
+  .querySelector("#skills")
+  .insertAdjacentHTML(
+    "afterend",
+    '<section class="view" id="files"><div class="head"><div><h2 style="font-size:24px">My important files</h2><p class="sub">Keep useful notes, PDFs, code, and documents in one safe place.</p></div></div><div class="grid wide"><div class="card"><div class="head"><h2>Your saved files</h2><span class="tag" id="fileCount">0 files</span></div><div class="tasklist" id="fileList"></div></div><div class="card"><h2>Upload a file</h2><p class="sub">Free cloud vault: files up to 500 KB are saved privately with your planner.</p><form class="form" id="fileForm"><input required name="title" placeholder="Name, e.g. DBMS revision notes"><select name="importance"><option>High priority</option><option>Important</option><option>Reference</option></select><input class="full" required name="file" type="file"><button class="btn full">Save file to cloud</button></form></div></div></section>',
+  );
+document
+  .querySelector('[data-view="files"]')
+  .insertAdjacentHTML("afterend", '<button data-view="about">ⓘ About</button>');
+document
+  .querySelector("#files")
+  .insertAdjacentHTML(
+    "afterend",
+    '<section class="view" id="about"><div class="head"><div><h2 style="font-size:24px">About APKA APNA SATHI</h2><p class="sub">A calm space to plan your day, study with intention, and grow consistently.</p></div></div><div class="grid wide"><div class="card"><h2>Your all-in-one growth companion</h2><p class="sub" style="margin-top:10px">APKA APNA SATHI brings your B.Tech journey into one focused place: daily tasks, personal reflection, semester goals, skills, LeetCode practice, reminders, and the notes that matter.</p><div style="margin-top:22px"><h3>What each space does</h3><p class="sub"><b>Daily tasks</b> keeps today clear. <b>LeetCode</b> captures your problem logic and consistency. <b>Personal space</b> makes room for your mood and reflections. <b>Semester goals</b> keeps the big picture visible. <b>Skills roadmap</b> helps you learn beyond college. <b>My files</b> keeps small, important study material nearby.</p></div><div style="margin-top:22px"><h3>Your data, your progress</h3><p class="sub">Cloud Sync keeps your planner connected to your own Google account. You can also download backups whenever you want an extra copy.</p></div></div><div class="card" style="text-align:center;display:flex;flex-direction:column;justify-content:center"><div class="flame">✦</div><h2 style="margin-top:12px">Built with purpose</h2><p class="sub" style="margin:8px auto 20px;max-width:280px">A simple planner made for showing up, learning deeply, and becoming better one day at a time.</p><div class="tag" style="align-self:center">Developed by Amit Soni</div><p class="sub" style="margin-top:18px">Want to share feedback or an idea? Add your contact email here to make it easy for people to reach you.</p></div></div></section>',
+  );
+document
+  .querySelector('[data-view="about"]')
+  .insertAdjacentHTML(
+    "afterend",
+    '<button data-view="profile">◉ Profile & sync</button><button data-view="contact">✉ Contact</button>',
+  );
+document
+  .querySelector("#about")
+  .insertAdjacentHTML(
+    "afterend",
+    '<section class="view" id="profile"><div class="head"><div><h2 style="font-size:24px">Profile & cloud safety</h2><p class="sub">Manage your sign-in, cloud status, and your personal backup.</p></div></div><div class="grid wide"><div class="card"><h2>Cloud Sync</h2><p class="sub" style="margin:8px 0 16px">Sign in to save your planner privately to your Google account and restore it on another phone or laptop.</p><div id="profileTools" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"></div></div><div class="card"><h2>Good to know</h2><p class="sub" style="margin-top:8px">Use Cloud Sync for automatic saving. Use Backup data occasionally for an additional file copy. Restore is useful if you have a saved backup file.</p></div></div></section><section class="view" id="contact"><div class="head"><div><h2 style="font-size:24px">Contact Amit</h2><p class="sub">Feedback, ideas, or a question about APKA APNA SATHI — feel free to connect.</p></div></div><div class="grid two"><a class="card contact-card" href="mailto:amitsoni2006@gmail.co"><div class="icon">✉</div><h2>Email</h2><p class="sub">amitsoni2006@gmail.co</p><span class="link">Send an email →</span></a><a class="card contact-card" href="https://wa.me/919305319898" target="_blank" rel="noopener"><div class="icon">◉</div><h2>WhatsApp</h2><p class="sub">+91 93053 19898</p><span class="link">Message on WhatsApp →</span></a></div><div class="card" style="margin-top:18px;text-align:center"><div class="tag">Developed by Amit Soni</div><p class="sub" style="margin-top:12px">Thank you for using APKA APNA SATHI. Keep learning, keep building, and keep showing up.</p></div></section>',
+  );
+document
+  .querySelector("#about .tag")
+  .insertAdjacentHTML(
+    "afterend",
+    '<p class="sub" style="margin-top:18px">Contact: amitsoni2006@gmail.co · WhatsApp: +91 93053 19898</p>',
+  );
+document.head.insertAdjacentHTML(
+  "beforeend",
+  "<style>.mobile-menu{display:none}.about-open{display:none}@media(max-width:850px){.side{display:grid;grid-template-columns:auto 1fr auto;gap:8px;padding:10px 14px;align-items:center}.mobile-menu{display:block;border:0;background:#202e54;color:#fff;border-radius:9px;padding:8px 10px;font-size:18px;cursor:pointer}.side .brand{padding:0;font-size:17px}.side .nav{display:none;grid-column:1/-1;grid-template-columns:1fr 1fr;gap:4px;padding-top:7px}.side .nav.open{display:grid}.side .nav button{background:#202e54;border-radius:8px;padding:9px;font-size:13px}.top{position:sticky;top:0;z-index:2;background:var(--bg);padding:10px 0;margin-bottom:16px}.top h1{font-size:22px}.top>div:last-child{gap:5px!important;flex-wrap:wrap;justify-content:flex-end}.top .text{font-size:12px;padding:3px}.top .btn{padding:7px 9px;font-size:12px}.date{font-size:12px}.main{padding:15px 12px 40px}.card{padding:16px;border-radius:14px}.metrics{grid-template-columns:repeat(3,1fr);gap:6px}.metric{padding:10px}.metric b{font-size:18px}.metric small{font-size:10px}.task{align-items:flex-start;flex-wrap:wrap}.task .body{min-width:calc(100% - 35px)}.task .tag{margin-left:31px}.form{grid-template-columns:1fr}.form .full{grid-column:auto}.moods{flex-wrap:wrap}.mood{min-width:30%}.cal{gap:4px}.cal span{font-size:11px}.welcome{padding:19px}.welcome h2{font-size:20px}}@media(max-width:390px){.top>div:last-child .text{display:none}.side .nav{grid-template-columns:1fr}.metric small{font-size:9px}}</style>",
+);
+document
+  .querySelector(".side")
+  .insertAdjacentHTML(
+    "afterbegin",
+    '<button class="mobile-menu" id="mobileMenu" aria-label="Open menu">☰</button>',
+  );
+document.querySelector("#mobileMenu").onclick = () => {
+  document.querySelector("#nav").classList.toggle("open");
+  document.querySelector("#mobileMenu").textContent = document
+    .querySelector("#nav")
+    .classList.contains("open")
+    ? "×"
+    : "☰";
+};
+document
+  .querySelector(".side")
+  .insertAdjacentHTML(
+    "beforeend",
+    '<button class="drawer-backdrop" id="drawerBackdrop" aria-label="Close menu"></button>',
+  );
+document.querySelector("#drawerBackdrop").onclick = () =>
+  document.querySelector("#mobileMenu").click();
+document
+  .querySelector("#profileTools")
+  .append(
+    document.querySelector("#cloudLogin"),
+    document.querySelector("#cloudStatus"),
+    document.querySelector("#export"),
+    document.querySelector("#import").closest("label"),
+  );
+document.head.insertAdjacentHTML(
+  "beforeend",
+  "<style>.contact-card{display:block;text-decoration:none;color:inherit;transition:transform .18s,box-shadow .18s}.contact-card:hover{transform:translateY(-3px);box-shadow:0 18px 35px rgba(28,39,75,.12)}.drawer-backdrop{display:none}@media(max-width:850px){.side{display:flex;position:sticky;top:0;z-index:20;min-height:57px}.side .brand{flex:1;text-align:center}.mobile-menu{z-index:32}.side .nav{display:grid!important;position:fixed;z-index:31;left:0;top:0;bottom:0;width:min(310px,84vw);padding:78px 15px 20px;background:#121c38;grid-template-columns:1fr;gap:7px;overflow:auto;transform:translateX(-105%);transition:transform .25s ease;box-shadow:18px 0 40px rgba(0,0,0,.3)}.side .nav.open{transform:translateX(0)}.side .nav button{font-size:15px;padding:14px 15px;background:transparent;text-align:left}.side .nav button.active{background:#293860}.drawer-backdrop{position:fixed;z-index:30;inset:0;border:0;background:rgba(8,14,30,.48)}.side .nav.open~.drawer-backdrop{display:block}.top>div:last-child{display:block!important}.top>div:last-child>*:not(.date){display:none!important}.top{align-items:flex-start}.date{display:block!important;margin-top:6px}.contact-card{min-height:150px}.contact-card .icon{margin-bottom:12px}.side .nav button:last-child{margin-top:12px;border-top:1px solid #334267;border-radius:0}.profile-tool-wrap{display:flex!important}}@media(min-width:851px){#profileTools{min-height:42px}}</style>",
+);
+document.querySelector("#nav").addEventListener("click", (e) => {
+  if (
+    e.target.closest("[data-view]") &&
+    document.querySelector("#nav").classList.contains("open")
+  )
+    document.querySelector("#mobileMenu").click();
+});
+document.querySelector('[data-view="profile"]').remove();
+document.querySelector(".desktop-profile-link")?.remove();
+document
+  .querySelector(".top > div:last-child")
+  .insertAdjacentHTML(
+    "afterbegin",
+    '<button class="profile-trigger" id="desktopProfile" aria-label="Open profile"><span id="desktopProfileLetter">A</span><i>Profile</i></button>',
+  );
+document.querySelector("#desktopProfile").onclick = () => {
+  document
+    .querySelectorAll(".nav button,.view")
+    .forEach((x) => x.classList.remove("active"));
+  document.querySelector("#profile").classList.add("active");
+  document.querySelector("#heading").textContent = "Profile & cloud safety";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+document
+  .querySelector(".side")
+  .insertAdjacentHTML(
+    "beforeend",
+    '<button class="mobile-profile" id="mobileProfile" aria-label="Open profile">A</button>',
+  );
+document.querySelector("#mobileProfile").onclick = () => {
+  document
+    .querySelectorAll(".nav button,.view")
+    .forEach((x) => x.classList.remove("active"));
+  document.querySelector("#profile").classList.add("active");
+  document.querySelector("#heading").textContent = "Profile & cloud safety";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+if (cloudAuth)
+  cloudAuth.onAuthStateChanged((user) => {
+    let initial = user
+      ? (user.displayName || user.email || "A").trim().charAt(0).toUpperCase()
+      : "A";
+    document.querySelector("#mobileProfile").textContent = initial;
+    document.querySelector("#desktopProfileLetter").textContent = initial;
+  });
+document.head.insertAdjacentHTML(
+  "beforeend",
+  "<style>:root{--ink:#101a35;--muted:#6d7893;--bg:#f4f6fb;--line:#e7eaf2;--violet:#6559e8;--navy:#101a36}body{letter-spacing:-.08px;background:radial-gradient(circle at 90% -10%,#e8e3ff 0,transparent 25%),var(--bg)}.side{box-shadow:10px 0 34px rgba(10,20,55,.08)}.brand{line-height:1.05}.brand span{display:inline-block}.nav{margin-top:5px}.nav button{font-weight:650;transition:background .18s,color .18s,transform .18s}.nav button:hover{transform:translateX(2px)}.main{max-width:1320px}.top{padding-bottom:5px}.top h1{font-weight:820}.eyebrow{font-size:10px;letter-spacing:.14em}.card{border-color:rgba(222,226,239,.9);box-shadow:0 12px 32px rgba(25,37,78,.055);transition:box-shadow .2s,transform .2s}.card:hover{box-shadow:0 18px 40px rgba(25,37,78,.085)}.welcome{box-shadow:0 18px 38px rgba(101,89,232,.24)}.welcome small{color:#f0eeff!important;font-weight:650}.welcome .progress{box-shadow:inset 0 1px 2px rgba(0,0,0,.08)}.metric{border:1px solid rgba(255,255,255,.55)}.metric b{font-weight:820}.head h2,h2{font-weight:780;letter-spacing:-.45px}.sub{line-height:1.55}.task{padding:13px 14px;transition:border-color .18s,background .18s,transform .18s}.task:hover{border-color:#cfcaf9;transform:translateY(-1px)}.task .title{letter-spacing:-.18px}.task .tag{white-space:nowrap}.task label.tag{display:flex;align-items:center;gap:3px;background:#f1efff;color:#6559e8;padding:5px 7px;cursor:pointer}.task label.tag input{width:14px;height:14px;accent-color:#6559e8;margin:0}.task .del{border-radius:7px;width:27px;height:27px;line-height:22px}.task .del:hover{background:#fff0f2;color:#d74c67}.btn{box-shadow:0 7px 15px rgba(101,89,232,.19);transition:transform .16s,box-shadow .16s}.btn:hover{transform:translateY(-1px);box-shadow:0 10px 20px rgba(101,89,232,.26)}.form input,.form select,textarea,.note{background:#fcfcff;border-color:#e1e5f0;transition:border-color .16s,box-shadow .16s}.form input:focus,.form select:focus,textarea:focus,.note:focus{border-color:#8c80f0;box-shadow:0 0 0 3px rgba(101,89,232,.1)}.check{transition:all .16s}.skill,.goal{background:linear-gradient(145deg,#fff,#fbfbff)}.bar{height:8px}.cal span.marked{box-shadow:inset 0 0 0 1px rgba(32,180,142,.16)}.contact-card{background:linear-gradient(145deg,#fff,#faf9ff)}@media(max-width:850px){body{background:#f5f6fb}.top{padding:9px 2px 12px;margin-bottom:10px}.top h1{font-size:23px}.eyebrow{font-size:9px}.main{padding:12px 12px 36px}.card{padding:16px;box-shadow:0 8px 22px rgba(25,37,78,.055)}.card:hover{transform:none}.welcome{border-radius:17px;padding:19px}.hero,.two,.wide{gap:13px}.metrics{margin-top:13px}.metric{min-height:74px;display:flex;flex-direction:column;justify-content:center}.metric b{font-size:19px}.metric small{margin-top:2px}.task{padding:12px;gap:9px}.task .body{min-width:calc(100% - 30px)}.task .tag{margin-left:30px}.task label.tag{margin-left:auto!important}.task .del{margin-left:auto}.head{gap:9px}.head h2{font-size:16px}.sub{font-size:13px}.form input,.form select,textarea{min-height:43px}.btn{min-height:42px}.goalgrid{gap:10px}.skill{padding:12px}.mood{min-height:58px}.month h2{font-size:15px}.drawer-backdrop{backdrop-filter:blur(2px)}.side .nav button{font-size:15px;font-weight:700}.side .nav button:first-child{margin-top:4px}.contact-card{min-height:135px}.contact-card:hover{transform:none}}@media(max-width:430px){.metric{padding:9px 8px}.metric b{font-size:18px}.metric small{font-size:9px}.date{font-size:11px}.task .meta{font-size:11px}.welcome h2{font-size:19px}.streak .number{font-size:34px}.week .dot{width:24px;height:24px}.moods{gap:5px}.mood{min-width:31%;padding:8px 4px}}</style>",
+);
+document
+  .querySelector("#leetForm")
+  .insertAdjacentHTML(
+    "beforeend",
+    '<input class="full" name="codeFile" type="file" accept=".js,.ts,.py,.java,.cpp,.c,.cs,.go,.rs,.html,.css,.txt,.md" title="Attach your VS Code solution file"><small class="full sub">Optional: attach the code file you wrote in VS Code.</small>',
+  );
+const K = "btech-tracker",
+  init = {
+    tasks: [
+      {
+        id: 1,
+        title: "Complete DSA practice set",
+        type: "College",
+        meta: "45 minutes",
+        done: false,
+      },
+      {
+        id: 2,
+        title: "Review today’s class notes",
+        type: "College",
+        meta: "30 minutes",
+        done: false,
+      },
+      {
+        id: 3,
+        title: "Build one small project feature",
+        type: "Skill",
+        meta: "60 minutes",
+        done: false,
+      },
+    ],
+    journal: "",
+    mood: "",
+    goals: [
+      ["Maintain 8.5+ SGPA", 35],
+      ["Complete 2 portfolio projects", 20],
+      ["Solve 150 DSA problems", 48],
+      ["Join one tech community", 60],
+    ],
+    skills: [
+      ["🧩", "Data structures & algorithms", "Problem-solving foundation", 35],
+      ["⌘", "Web development", "Build and ship real projects", 20],
+      ["⌥", "Git & GitHub", "Version control and collaboration", 55],
+    ],
+    history: {},
+    records: {},
+    activeDate: "",
+  };
+let d;
+try {
+  d = { ...init, ...JSON.parse(localStorage.getItem(K) || "{}") };
+} catch {
+  d = init;
+}
+for (const x of ["tasks", "goals", "skills", "history", "records"])
+  d[x] ??= init[x];
+const $ = (x) => document.querySelector(x),
+  key = () => {
+    let now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 10);
+  },
+  save = () => {
+    d.records[d.activeDate || key()] = {
+      tasks: d.tasks,
+      journal: d.journal,
+      mood: d.mood,
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(K, JSON.stringify(d));
+  },
+  esc = (x) =>
+    String(x).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+if (d.activeDate && d.activeDate !== key()) {
+  d.records[d.activeDate] = {
+    tasks: d.tasks,
+    journal: d.journal,
+    mood: d.mood,
+    savedAt: new Date().toISOString(),
+  };
+  let newDayRecord = d.records[key()];
+  d.tasks = newDayRecord?.tasks
+    ? JSON.parse(JSON.stringify(newDayRecord.tasks))
+    : [];
+  d.journal = newDayRecord?.journal || "";
+  d.mood = newDayRecord?.mood || "";
+}
+d.activeDate = key();
+save();
+function tm(t) {
+  return `<div class="task ${t.done ? "done" : ""}"><input class="check" type="checkbox" data-check="${t.id}" ${t.done ? "checked" : ""}><div class="body"><div class="title">${esc(t.title)}</div><div class="meta">${esc(t.meta || "No time set")} · ${esc(t.type)}</div></div><span class="tag">${esc(t.type)}</span><button class="del" data-del="${t.id}">×</button></div>`;
+}
+function update() {
+  let done = d.tasks.filter((x) => x.done).length;
+  if (d.tasks.length && done === d.tasks.length) d.history[key()] = 1;
+  else delete d.history[key()];
+  save();
+}
+function streak() {
+  let n = 0,
+    x = new Date();
+  while (d.history[x.toISOString().slice(0, 10)]) {
+    n++;
+    x.setDate(x.getDate() - 1);
+  }
+  return n;
+}
+function tasks() {
+  let html = d.tasks.length
+    ? d.tasks.map(tm).join("")
+    : '<div class="empty">Your list is clear. Add one meaningful task below.</div>';
+  $("#tasklist").innerHTML = html;
+  $("#dashlist").innerHTML = d.tasks.length
+    ? d.tasks.slice(0, 4).map(tm).join("")
+    : '<div class="empty">Add your first task for today.</div>';
+  let n = d.tasks.filter((x) => x.done).length;
+  $("#done").textContent = `${n}/${d.tasks.length}`;
+  $("#taskcount").textContent = `${d.tasks.length} tasks`;
+  $("#dailytext").textContent = `${n} of ${d.tasks.length} tasks complete`;
+  $("#dailybar").style.width =
+    (d.tasks.length ? (n / d.tasks.length) * 100 : 0) + "%";
+  $("#streak").textContent = streak();
+  $("#week").innerHTML = Array.from({ length: 7 }, (_, i) => {
+    let x = new Date();
+    x.setDate(x.getDate() - 6 + i);
+    let k = x.toISOString().slice(0, 10);
+    return `<div class="day ${d.history[k] ? "done" : ""} ${i === 6 ? "today" : ""}">${x.toLocaleDateString(undefined, { weekday: "narrow" })}<i class="dot"></i></div>`;
+  }).join("");
+}
+function personal() {
+  $("#journal").value = d.journal;
+  $("#preview").textContent =
+    d.journal || "No reflection yet. Write down one win, lesson, or thought.";
+  $("#moodstat").textContent = d.mood || "—";
+  $("#moodsave").textContent = d.mood
+    ? `${d.mood} saved for today.`
+    : "Choose a mood to save it.";
+  document
+    .querySelectorAll(".mood")
+    .forEach((x) => x.classList.toggle("active", x.dataset.mood === d.mood));
+}
+function goals() {
+  $("#goals").innerHTML = d.goals
+    .map(
+      (g, i) =>
+        `<div class="goal"><div class="ghead"><b>${esc(g[0])}</b><button class="text" data-goal="${i}">${g[1]}%</button></div><div class="bar"><i style="width:${g[1]}%"></i></div><small>Click percentage to update</small></div>`,
+    )
+    .join("");
+}
+function skills() {
+  let a = d.skills.length
+    ? Math.round(d.skills.reduce((a, x) => a + x[3], 0) / d.skills.length)
+    : 0;
+  $("#skillavg").textContent = a + "%";
+  $("#skillslist").innerHTML =
+    d.skills
+      .map(
+        (s, i) =>
+          `<div class="skill"><div class="icon">${s[0]}</div><div class="body"><b>${esc(s[1])}</b><small>${esc(s[2])}</small><div class="bar"><i style="width:${s[3]}%"></i></div></div><button class="pct" data-skill="${i}">${s[3]}%</button></div>`,
+      )
+      .join("") || '<div class="empty">Add a skill you want to learn.</div>';
+}
+let cd = new Date();
+cd.setDate(1);
+function cal() {
+  $("#month").textContent = cd.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+  let y = cd.getFullYear(),
+    m = cd.getMonth(),
+    h = ["S", "M", "T", "W", "T", "F", "S"].map((x) => `<b>${x}</b>`).join("");
+  for (let i = 0; i < new Date(y, m, 1).getDay(); i++) h += "<span></span>";
+  for (let i = 1; i <= new Date(y, m + 1, 0).getDate(); i++) {
+    let k = new Date(y, m, i).toISOString().slice(0, 10);
+    h += `<span class="${d.history[k] ? "marked " : ""}${k === key() ? "today" : ""}">${i}</span>`;
+  }
+  $("#cal").innerHTML = h;
+}
+function render() {
+  tasks();
+  personal();
+  goals();
+  skills();
+  cal();
+}
+render();
+$("#nav").onclick = (e) => {
+  let b = e.target.closest("[data-view]");
+  if (!b) return;
+  document
+    .querySelectorAll(".nav button,.view")
+    .forEach((x) => x.classList.remove("active"));
+  b.classList.add("active");
+  $("#" + b.dataset.view).classList.add("active");
+  $("#heading").textContent = b.textContent.trim();
+};
+document
+  .querySelectorAll("[data-go]")
+  .forEach(
+    (x) =>
+      (x.onclick = () =>
+        document.querySelector(`[data-view="${x.dataset.go}"]`).click()),
+  );
+document.addEventListener("change", (e) => {
+  if (e.target.dataset.check) {
+    let t = d.tasks.find((x) => x.id == e.target.dataset.check);
+    t.done = e.target.checked;
+    update();
+    render();
+  }
+});
+document.addEventListener("click", (e) => {
+  let x = e.target.closest("[data-del]");
+  if (x) {
+    d.tasks = d.tasks.filter((t) => t.id != x.dataset.del);
+    update();
+    render();
+  }
+  x = e.target.closest("[data-goal]");
+  if (x) {
+    let v = prompt("Progress (0–100)", d.goals[x.dataset.goal][1]);
+    if (v !== null && !isNaN(v)) {
+      d.goals[x.dataset.goal][1] = Math.max(0, Math.min(100, +v));
+      save();
+      goals();
+    }
+  }
+  x = e.target.closest("[data-skill]");
+  if (x) {
+    let v = prompt("Progress (0–100)", d.skills[x.dataset.skill][3]);
+    if (v !== null && !isNaN(v)) {
+      d.skills[x.dataset.skill][3] = Math.max(0, Math.min(100, +v));
+      save();
+      skills();
+    }
+  }
+});
+$("#taskform").onsubmit = (e) => {
+  e.preventDefault();
+  let f = new FormData(e.target);
+  d.tasks.push({
+    id: Date.now(),
+    title: f.get("title"),
+    type: f.get("type"),
+    meta: f.get("meta"),
+    done: false,
+  });
+  save();
+  e.target.reset();
+  render();
+};
+$("#moods").onclick = (e) => {
+  let x = e.target.closest("[data-mood]");
+  if (x) {
+    d.mood = x.dataset.mood;
+    save();
+    personal();
+  }
+};
+$("#savejournal").onclick = () => {
+  d.journal = $("#journal").value.trim();
+  save();
+  $("#journalsave").textContent = "Saved just now.";
+  personal();
+};
+$("#addgoal").onclick = () => {
+  let x = prompt("What is your semester goal?");
+  if (x) {
+    d.goals.push([x, 0]);
+    save();
+    goals();
+  }
+};
+$("#addskill").onclick = () => {
+  let x = prompt("Which skill do you want to learn?");
+  if (x) {
+    d.skills.push([
+      "✦",
+      x,
+      prompt("A short learning focus:", "Practice consistently") ||
+        "Practice consistently",
+      0,
+    ]);
+    save();
+    skills();
+  }
+};
+$("#prev").onclick = () => {
+  cd.setMonth(cd.getMonth() - 1);
+  cal();
+};
+$("#next").onclick = () => {
+  cd.setMonth(cd.getMonth() + 1);
+  cal();
+};
+$("#export").onclick = () => {
+  save();
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(
+    new Blob([JSON.stringify(d, null, 2)], { type: "application/json" }),
+  );
+  a.download = "btech-tracker-backup-" + key() + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+$("#import").onchange = (e) => {
+  let f = e.target.files[0];
+  if (!f) return;
+  let r = new FileReader();
+  r.onload = () => {
+    try {
+      let imported = JSON.parse(r.result);
+      if (!imported || typeof imported !== "object") throw 0;
+      d = { ...init, ...imported };
+      d.activeDate = key();
+      save();
+      render();
+      alert("Your Tracker backup has been restored.");
+    } catch {
+      alert("That file is not a valid Tracker backup.");
+    }
+  };
+  r.readAsText(f);
+};
+$("#date").textContent = new Date().toLocaleDateString(undefined, {
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+});
+// LeetCode journal: each entry has the exact completion timestamp and linked logic notes.
+d.leetcode ??= [];
+function renderLeet() {
+  let days = new Set(d.leetcode.map((q) => q.solvedAt.slice(0, 10))),
+    n = 0,
+    day = new Date();
+  while (days.has(day.toISOString().slice(0, 10))) {
+    n++;
+    day.setDate(day.getDate() - 1);
+  }
+  $("#leetStreak").textContent = "🔥 " + n + " day streak";
+  $("#leetCount").textContent = d.leetcode.length + " solved";
+  $("#leetList").innerHTML = d.leetcode.length
+    ? d.leetcode
+        .slice()
+        .reverse()
+        .map(
+          (q) =>
+            `<div class="task"><div class="icon">⌁</div><div class="body"><div class="title">${esc(q.title)} <span class="tag">${esc(q.difficulty)}</span></div><div class="meta">Solved: ${new Date(q.solvedAt).toLocaleString()}</div><div class="meta" style="white-space:pre-wrap;margin-top:7px"><b>Logic:</b> ${esc(q.logic)}</div></div><button class="del" data-leetdel="${q.id}">×</button></div>`,
+        )
+        .join("")
+    : '<div class="empty">Your solved-question journal starts here.</div>';
+}
+$("#leetForm").onsubmit = (e) => {
+  e.preventDefault();
+  let f = new FormData(e.target);
+  d.leetcode.push({
+    id: Date.now(),
+    title: f.get("title"),
+    difficulty: f.get("difficulty"),
+    link: f.get("link"),
+    logic: f.get("logic"),
+    solvedAt: new Date().toISOString(),
+  });
+  save();
+  e.target.reset();
+  renderLeet();
+};
+document.addEventListener("click", (e) => {
+  let b = e.target.closest("[data-leetdel]");
+  if (b) {
+    d.leetcode = d.leetcode.filter((q) => q.id != b.dataset.leetdel);
+    save();
+    renderLeet();
+  }
+});
+const originalTaskForm = $("#taskform").onsubmit;
+$("#taskform").onsubmit = (e) => {
+  originalTaskForm(e);
+  let t = d.tasks.at(-1);
+  if (t) {
+    t.createdAt = new Date().toISOString();
+    save();
+    render();
+  }
+};
+document.addEventListener("change", (e) => {
+  if (e.target.dataset.check) {
+    let t = d.tasks.find((x) => x.id == e.target.dataset.check);
+    if (t) {
+      t.completedAt = e.target.checked ? new Date().toISOString() : null;
+      save();
+      render();
+    }
+  }
+});
+tm = (t) =>
+  `<div class="task ${t.done ? "done" : ""}"><input class="check" type="checkbox" data-check="${t.id}" ${t.done ? "checked" : ""}><div class="body"><div class="title">${esc(t.title)}</div><div class="meta">${esc(t.meta || "No time set")} · ${esc(t.type)}${t.createdAt ? " · Added: " + new Date(t.createdAt).toLocaleString() : ""}${t.completedAt ? " · Completed: " + new Date(t.completedAt).toLocaleString() : ""}</div></div><span class="tag">${esc(t.type)}</span><button class="del" data-del="${t.id}">×</button></div>`;
+renderLeet();
+render();
+function renderLeetCalendar() {
+  let now = new Date(),
+    y = now.getFullYear(),
+    m = now.getMonth(),
+    solved = new Set(d.leetcode.map((q) => q.solvedAt.slice(0, 10))),
+    days = new Date(y, m + 1, 0).getDate(),
+    first = new Date(y, m, 1).getDay();
+  $("#leetMonth").textContent = now.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+  let h = ["S", "M", "T", "W", "T", "F", "S"]
+    .map((x) => "<b>" + x + "</b>")
+    .join("");
+  for (let i = 0; i < first; i++) h += "<span></span>";
+  for (let date = 1; date <= days; date++) {
+    let stamp = new Date(y, m, date).toISOString().slice(0, 10),
+      count = d.leetcode.filter(
+        (q) => q.solvedAt.slice(0, 10) === stamp,
+      ).length,
+      cl = solved.has(stamp) ? "marked " : "";
+    if (stamp === key()) cl += "today";
+    h +=
+      '<span class="' +
+      cl +
+      '" title="' +
+      (count ? count + " problem solved" : "") +
+      '">' +
+      date +
+      (count ? '<small style="font-size:9px">' + count + "</small>" : "") +
+      "</span>";
+  }
+  $("#leetCalendar").innerHTML = h;
+}
+const originalRenderLeet = renderLeet;
+renderLeet = () => {
+  originalRenderLeet();
+  renderLeetCalendar();
+};
+renderLeet();
+// Cloud sync: local data remains usable offline; when signed in it is mirrored to this user's private Firestore document.
+function cloudMessage(text) {
+  $("#cloudStatus").textContent = text;
+}
+async function pushCloud() {
+  if (!cloudUser || !cloudDb) return;
+  let snapshot = JSON.stringify(d);
+  if (snapshot === lastCloudData) return;
+  try {
+    await cloudDb.collection("studyPlanners").doc(cloudUser.uid).set(
+      {
+        plannerJson: snapshot,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+    lastCloudData = snapshot;
+    cloudMessage("Saved to cloud ✓");
+  } catch (error) {
+    console.warn(error);
+    cloudMessage("Cloud error: " + (error.code || "please refresh"));
+  }
+}
+if (cloudAuth) {
+  cloudAuth.onAuthStateChanged(async (user) => {
+    cloudUser = user;
+    if (!user) {
+      $("#cloudLogin").textContent = "☁ Cloud sync";
+      cloudMessage("Sign in to protect data");
+      return;
+    }
+    $("#cloudLogin").textContent =
+      "☁ " + (user.displayName || "Signed in").split(" ")[0];
+    cloudMessage("Loading cloud data…");
+    try {
+      let localBefore = clonePlannerValue(d),
+        doc = await cloudDb.collection("studyPlanners").doc(user.uid).get(),
+        remote =
+          doc.exists && doc.data().plannerJson
+            ? { ...init, ...JSON.parse(doc.data().plannerJson) }
+            : { ...init, records: {} };
+      localBefore.records ??= {};
+      if (
+        !localBefore.records[localBefore.activeDate || key()] &&
+        localBefore.tasks?.length
+      )
+        localBefore.records[localBefore.activeDate || key()] = {
+          tasks: clonePlannerValue(localBefore.tasks),
+          journal: localBefore.journal || "",
+          mood: localBefore.mood || "",
+          savedAt: new Date().toISOString(),
+        };
+      d = keepSelectedDay(
+        mergePlannerData(localBefore, remote),
+        localBefore.activeDate || key(),
+      );
+      let mergedJson = JSON.stringify(d);
+      localStorage.setItem(K, mergedJson);
+      render();
+      renderLeet();
+      lastCloudData = doc.data()?.plannerJson || "";
+      if (mergedJson !== lastCloudData) await pushCloud();
+    } catch (error) {
+      console.warn(error);
+      cloudMessage("Cloud connection problem");
+    }
+  });
+  $("#cloudLogin").onclick = async () => {
+    if (cloudUser) {
+      await cloudAuth.signOut();
+      return;
+    }
+    try {
+      await cloudAuth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    } catch (error) {
+      console.warn(error);
+      cloudMessage("Sign-in needs the hosted app URL");
+    }
+  };
+  setInterval(pushCloud, 2500);
+}
+// Reminders work while this planner page is open. The browser asks permission only when you turn one on.
+async function enableAlarm(task) {
+  if (!task.alarmEnabled) return;
+  if (!("Notification" in window)) {
+    alert("Your browser does not support notifications.");
+    task.alarmEnabled = false;
+    save();
+    render();
+    return;
+  }
+  if (Notification.permission === "default")
+    await Notification.requestPermission();
+  if (Notification.permission !== "granted") {
+    task.alarmEnabled = false;
+    save();
+    render();
+    alert("Please allow notifications to use reminders.");
+  }
+}
+function checkAlarms() {
+  let now = new Date(),
+    clock = now.toTimeString().slice(0, 5),
+    today = key();
+  for (let task of d.tasks) {
+    if (
+      task.alarmEnabled &&
+      task.alarmTime === clock &&
+      task.alarmFiredAt !== today + clock
+    ) {
+      task.alarmFiredAt = today + clock;
+      save();
+      new Notification("APKA APNA SATHI reminder", { body: task.title });
+    }
+  }
+}
+setInterval(checkAlarms, 30000);
+document.addEventListener("change", async (e) => {
+  let alarm = e.target.closest("[data-alarm]");
+  if (alarm) {
+    let task = d.tasks.find((t) => t.id == alarm.dataset.alarm);
+    task.alarmEnabled = alarm.checked;
+    if (!task.alarmTime) task.alarmTime = "09:00";
+    await enableAlarm(task);
+    save();
+    render();
+  }
+  let time = e.target.closest("[data-alarm-time]");
+  if (time) {
+    let task = d.tasks.find((t) => t.id == time.dataset.alarmTime);
+    task.alarmTime = time.value;
+    task.alarmFiredAt = "";
+    save();
+    render();
+  }
+});
+tm = (t) =>
+  `<div class="task ${t.done ? "done" : ""}"><input class="check" type="checkbox" data-check="${t.id}" ${t.done ? "checked" : ""}><div class="body"><div class="title">${esc(t.title)}</div><div class="meta">${esc(t.meta || "No time set")} · ${esc(t.type)}${t.createdAt ? " · Added: " + new Date(t.createdAt).toLocaleString() : ""}${t.completedAt ? " · Completed: " + new Date(t.completedAt).toLocaleString() : ""}</div></div><label class="tag" title="Turn on a reminder"><input type="checkbox" data-alarm="${t.id}" ${t.alarmEnabled ? "checked" : ""}> 🔔</label>${t.alarmEnabled ? '<input type="time" data-alarm-time="' + t.id + '" value="' + (t.alarmTime || "09:00") + '" style="width:92px;border:1px solid #e7eaf2;border-radius:7px;padding:5px">' : ""}<button class="del" data-del="${t.id}">×</button></div>`;
+async function readFreeFile(file) {
+  if (!cloudUser) throw new Error("Sign in to Cloud Sync first");
+  if (file.size > 500 * 1024)
+    throw new Error(
+      "Free cloud vault supports files up to 500 KB. Use Google Drive for larger files.",
+    );
+  return new Promise((resolve, reject) => {
+    let reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Could not read this file."));
+    reader.readAsDataURL(file);
+  });
+}
+d.documents ??= [];
+function renderFiles() {
+  $("#fileCount").textContent =
+    d.documents.length + " file" + (d.documents.length === 1 ? "" : "s");
+  $("#fileList").innerHTML = d.documents.length
+    ? d.documents
+        .slice()
+        .reverse()
+        .map(
+          (f) =>
+            `<div class="task"><div class="icon">▰</div><div class="body"><div class="title">${esc(f.title)} <span class="tag">${esc(f.importance)}</span></div><div class="meta">Uploaded: ${new Date(f.uploadedAt).toLocaleString()} · ${esc(f.fileName)}</div></div><a class="link" target="_blank" rel="noopener" href="${esc(f.url)}">Open</a><button class="del" data-filedel="${f.id}">×</button></div>`,
+        )
+        .join("")
+    : '<div class="empty">Upload notes, PDFs, or files you want to revisit later.</div>';
+}
+renderFiles();
+$("#fileForm").onsubmit = async (e) => {
+  e.preventDefault();
+  let form = e.target,
+    file = form.elements.file.files[0];
+  try {
+    cloudMessage("Saving file…");
+    let f = new FormData(form),
+      url = await readFreeFile(file);
+    d.documents.push({
+      id: Date.now(),
+      title: f.get("title"),
+      importance: f.get("importance"),
+      fileName: file.name,
+      url,
+      uploadedAt: new Date().toISOString(),
+    });
+    save();
+    renderFiles();
+    form.reset();
+    cloudMessage("Saved to cloud ✓");
+  } catch (error) {
+    alert(error.message || "Could not save file.");
+    cloudMessage("File not saved");
+  }
+};
+$("#leetForm").onsubmit = async (e) => {
+  e.preventDefault();
+  let form = e.target,
+    f = new FormData(form),
+    file = form.elements.codeFile.files[0],
+    codeFile = null;
+  try {
+    if (file) {
+      cloudMessage("Saving solution file…");
+      codeFile = { name: file.name, url: await readFreeFile(file) };
+    }
+    d.leetcode.push({
+      id: Date.now(),
+      title: f.get("title"),
+      difficulty: f.get("difficulty"),
+      link: f.get("link"),
+      logic: f.get("logic"),
+      codeFile,
+      solvedAt: new Date().toISOString(),
+    });
+    save();
+    form.reset();
+    renderLeet();
+    cloudMessage("Saved to cloud ✓");
+  } catch (error) {
+    alert(error.message || "Could not save solution file.");
+    cloudMessage("File not saved");
+  }
+};
+const originalLeetView = renderLeet;
+renderLeet = () => {
+  originalLeetView();
+  document.querySelectorAll("#leetList .task").forEach((row, index) => {
+    let q = d.leetcode.slice().reverse()[index];
+    if (q.codeFile)
+      row
+        .querySelector(".body")
+        .insertAdjacentHTML(
+          "beforeend",
+          '<div class="meta" style="margin-top:7px">VS Code file: <a class="link" target="_blank" rel="noopener" href="' +
+            esc(q.codeFile.url) +
+            '">' +
+            esc(q.codeFile.name) +
+            "</a></div>",
+        );
+  });
+};
+document.addEventListener("click", (e) => {
+  let b = e.target.closest("[data-filedel]");
+  if (b) {
+    d.documents = d.documents.filter((f) => f.id != b.dataset.filedel);
+    save();
+    renderFiles();
+  }
+});
+render();
+renderLeet();
+document.head.insertAdjacentHTML(
+  "beforeend",
+  '<style>.mobile-profile{display:none}@media(max-width:850px){.side{display:flex!important;align-items:center!important;gap:9px!important;padding:10px 13px!important}.side .brand{order:1;flex:1!important;text-align:left!important;font-size:16px!important;line-height:1.08}.side .brand small{display:block!important;font-size:8px!important;margin-top:3px}.mobile-menu{order:2;background:#202e54!important;width:38px;height:38px;padding:0!important;border-radius:11px!important;font-size:18px!important}.mobile-profile{display:grid;order:3;place-items:center;width:38px;height:38px;border:2px solid rgba(169,158,255,.55);background:linear-gradient(145deg,#887af0,#574bd0);color:#fff;border-radius:50%;font:800 14px Inter,system-ui,sans-serif;cursor:pointer;box-shadow:0 5px 13px rgba(101,89,232,.3)}.top{padding:12px 3px 10px!important;min-height:69px}.top h1{font-size:21px!important;font-weight:800!important;letter-spacing:-.65px!important;line-height:1.12!important}.top .eyebrow{font-size:9px!important;letter-spacing:.11em!important}.top>div:first-child{max-width:72%}.top>div:last-child{align-self:flex-start}.view>.head h2{font-size:21px!important;line-height:1.18!important}.view>.head .sub{font-size:13px!important;margin-top:5px}.side .nav{padding-top:76px!important;width:min(330px,86vw)!important}.side .nav button{font-size:16px!important;padding:15px 16px!important;border-radius:11px!important;letter-spacing:0!important}.side .nav button:last-child{margin-top:10px!important;border-top:1px solid #334267!important}.side .nav button[data-view="contact"]{color:#dcd7ff!important}.side .nav button[data-view="about"]{margin-top:7px!important}.contact-card h2{font-size:18px!important}.contact-card .icon{width:42px;height:42px;font-size:20px}}</style>',
+);
+document.head.insertAdjacentHTML(
+  "beforeend",
+  '<style>.profile-trigger{display:flex;align-items:center;gap:8px;border:1px solid #e1e3f0;background:#fff;border-radius:12px;padding:6px 11px 6px 6px;color:#1b2643;font:700 13px Inter,system-ui,sans-serif;cursor:pointer;box-shadow:0 5px 16px rgba(23,35,70,.06)}.profile-trigger span{display:grid;place-items:center;width:29px;height:29px;border-radius:50%;background:linear-gradient(145deg,#887af0,#574bd0);color:#fff;font-size:12px}.profile-trigger i{font-style:normal}.view>.head>div>h2{font-size:24px!important;font-weight:800!important;line-height:1.2!important}.view>.head{min-height:55px;align-items:flex-start}.view>.head .sub{font-size:14px!important;line-height:1.5!important;margin-top:5px!important}.nav button{display:flex;align-items:center;gap:9px;font-weight:700!important}.nav button[data-view="dashboard"]::first-letter,.nav button[data-view="tasks"]::first-letter,.nav button[data-view="leetcode"]::first-letter{color:#afa5ff}@media(max-width:850px){.profile-trigger{display:none!important}.side{display:flex!important;align-items:center!important;gap:9px!important;padding:10px 13px!important}.side .brand{order:1;flex:1!important;text-align:left!important;font-size:16px!important;line-height:1.08}.side .brand small{display:block!important;font-size:8px!important;margin-top:3px}.mobile-menu{order:2;background:#202e54!important;width:38px;height:38px;padding:0!important;border-radius:11px!important;font-size:18px!important}.mobile-profile{display:grid!important;order:3;place-items:center;width:38px;height:38px;border:2px solid rgba(169,158,255,.55);background:linear-gradient(145deg,#887af0,#574bd0);color:#fff;border-radius:50%;font:800 14px Inter,system-ui,sans-serif;cursor:pointer;box-shadow:0 5px 13px rgba(101,89,232,.3)}.top{padding:12px 3px 10px!important;min-height:69px}.top h1{font-size:21px!important;font-weight:800!important;letter-spacing:-.65px!important;line-height:1.12!important}.top .eyebrow{font-size:9px!important;letter-spacing:.11em!important}.top>div:first-child{max-width:72%}.top>div:last-child{align-self:flex-start}.view>.head{min-height:0!important;margin-bottom:17px!important}.view>.head>div>h2{font-size:21px!important;line-height:1.18!important;font-weight:800!important}.view>.head .sub{font-size:13px!important;margin-top:5px!important}.side .nav{padding-top:76px!important;width:min(330px,86vw)!important}.side .nav button{font-size:16px!important;padding:15px 16px!important;border-radius:11px!important;letter-spacing:0!important}.side .nav button[data-view="profile"]{display:none!important}.side .nav button[data-view="contact"]{color:#dcd7ff!important}.side .nav button[data-view="about"]{margin-top:7px!important}.contact-card h2{font-size:18px!important}.contact-card .icon{width:42px;height:42px;font-size:20px}}@media(min-width:851px){.mobile-profile{display:none!important}}</style>',
+);
+/* Safe cross-device sync: records are merged by date so an empty device never erases another device's work. */
+let cloudUnsubscribe = null;
+function clonePlannerValue(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+function latestTime(a, b) {
+  return new Date(a || 0) >= new Date(b || 0) ? a : b;
+}
+function mergeTaskLists(first = [], second = []) {
+  let merged = new Map();
+  for (let task of [...first, ...second]) {
+    let old = merged.get(String(task.id));
+    if (!old) {
+      merged.set(String(task.id), clonePlannerValue(task));
+      continue;
+    }
+    let newer =
+      new Date(task.completedAt || task.createdAt || 0) >=
+      new Date(old.completedAt || old.createdAt || 0)
+        ? task
+        : old;
+    merged.set(String(task.id), {
+      ...old,
+      ...newer,
+      done: old.done || task.done,
+      completedAt: latestTime(old.completedAt, task.completedAt),
+    });
+  }
+  return [...merged.values()];
+}
+function mergeDailyRecord(first, second) {
+  if (!first) return clonePlannerValue(second);
+  if (!second) return clonePlannerValue(first);
+  let preferSecond =
+    new Date(second.savedAt || 0) >= new Date(first.savedAt || 0);
+  return {
+    tasks: mergeTaskLists(first.tasks, second.tasks),
+    journal: preferSecond
+      ? second.journal || first.journal
+      : first.journal || second.journal,
+    mood: preferSecond ? second.mood || first.mood : first.mood || second.mood,
+    savedAt:
+      latestTime(first.savedAt, second.savedAt) || new Date().toISOString(),
+  };
+}
+function mergePlannerData(local, remote) {
+  let result = { ...init, ...clonePlannerValue(remote), records: {} };
+  let allDates = new Set([
+    ...Object.keys(local.records || {}),
+    ...Object.keys(remote.records || {}),
+  ]);
+  for (let day of allDates)
+    result.records[day] = mergeDailyRecord(
+      local.records?.[day],
+      remote.records?.[day],
+    );
+  for (let group of ["leetcode", "documents"]) {
+    let entries = [...(local[group] || []), ...(remote[group] || [])],
+      unique = new Map();
+    for (let item of entries) unique.set(String(item.id), item);
+    result[group] = [...unique.values()];
+  }
+  result.history = {
+    ...(local.history || {}),
+    ...(remote.history || {}),
+  };
+  return result;
+}
+function keepSelectedDay(state, day) {
+  let record = state.records?.[day];
+  state.activeDate = day;
+  state.tasks = record?.tasks ? clonePlannerValue(record.tasks) : [];
+  state.journal = record?.journal || "";
+  state.mood = record?.mood || "";
+  return state;
+}
+if (cloudAuth) {
+  cloudAuth.onAuthStateChanged((user) => {
+    if (cloudUnsubscribe) {
+      cloudUnsubscribe();
+      cloudUnsubscribe = null;
+    }
+    if (!user) return;
+    cloudUnsubscribe = cloudDb
+      .collection("studyPlanners")
+      .doc(user.uid)
+      .onSnapshot((doc) => {
+        let remoteJson = doc.data()?.plannerJson;
+        if (!remoteJson) return;
+        try {
+          let remote = {
+            ...init,
+            ...JSON.parse(remoteJson),
+            records: JSON.parse(remoteJson).records || {},
+          };
+          if (remoteJson === lastCloudData) return;
+          let selected = d.activeDate || key(),
+            merged = keepSelectedDay(mergePlannerData(d, remote), selected);
+          let mergedJson = JSON.stringify(merged);
+          d = merged;
+          localStorage.setItem(K, mergedJson);
+          render();
+          renderLeet();
+          if (mergedJson !== remoteJson) {
+            lastCloudData = "";
+            pushCloud();
+          } else lastCloudData = remoteJson;
+        } catch (error) {
+          console.warn("Cloud merge failed", error);
+        }
+      });
+  });
+}
+/* Date-wise task planner: saving a new plan never overwrites another day's plan. */
+function localDateStamp(date) {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10);
+}
+function streakDeadline(day) {
+  let deadline = new Date(day + "T03:00:00");
+  deadline.setDate(deadline.getDate() + 1);
+  return deadline;
+}
+function isLockedStreakDay(day) {
+  return day < key() && new Date() >= streakDeadline(day);
+}
+streak = () => {
+  let day = new Date(key() + "T12:00:00"),
+    yesterday = new Date(day);
+  yesterday.setDate(yesterday.getDate() - 1);
+  let yesterdayKey = localDateStamp(yesterday);
+  if (!d.history[key()]) {
+    if (!d.history[yesterdayKey] && !isLockedStreakDay(yesterdayKey))
+      day.setDate(day.getDate() - 2);
+    else day.setDate(day.getDate() - 1);
+  }
+  let total = 0;
+  while (d.history[localDateStamp(day)]) {
+    total++;
+    day.setDate(day.getDate() - 1);
+  }
+  return total;
+};
+const baseTasksRenderer = tasks;
+function readableTaskDate(value) {
+  return new Date(value + "T12:00:00").toLocaleDateString(undefined, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+function refreshTaskDateControls() {
+  let selected = d.activeDate || key(),
+    picker = $("#taskDatePicker"),
+    label = $("#taskDate");
+  if (picker) picker.value = selected;
+  if (label)
+    label.textContent =
+      (selected === key() ? "Planning for today · " : "Planning for ") +
+      readableTaskDate(selected) +
+      (selected > key()
+        ? " · upcoming plan"
+        : selected < key()
+          ? " · past record"
+          : "");
+}
+function switchTaskDate(nextDate) {
+  if (!nextDate || nextDate === d.activeDate) {
+    refreshTaskDateControls();
+    return;
+  }
+  save();
+  d.activeDate = nextDate;
+  let record = d.records?.[nextDate];
+  d.tasks = record?.tasks ? JSON.parse(JSON.stringify(record.tasks)) : [];
+  d.journal = record?.journal || "";
+  d.mood = record?.mood || "";
+  save();
+  render();
+  refreshTaskDateControls();
+}
+tasks = () => {
+  baseTasksRenderer();
+  refreshTaskDateControls();
+};
+update = () => {
+  let done = d.tasks.filter((x) => x.done).length,
+    day = d.activeDate || key(),
+    today = key();
+  if (day > today) {
+    cloudMessage("Future tasks cannot affect your streak yet");
+    save();
+    return;
+  }
+  if (day < today && isLockedStreakDay(day)) {
+    cloudMessage(
+      "This day closed at 3:00 AM — task saved, streak stays locked",
+    );
+    save();
+    return;
+  }
+  if (d.tasks.length && done === d.tasks.length) d.history[day] = 1;
+  else delete d.history[day];
+  save();
+};
+$("#taskDatePicker").onchange = (e) => switchTaskDate(e.target.value);
+$("#previousTaskDate").onclick = () => {
+  let current = new Date((d.activeDate || key()) + "T12:00:00");
+  current.setDate(current.getDate() - 1);
+  switchTaskDate(current.toISOString().slice(0, 10));
+};
+$("#nextTaskDate").onclick = () => {
+  let current = new Date((d.activeDate || key()) + "T12:00:00");
+  current.setDate(current.getDate() + 1);
+  switchTaskDate(current.toISOString().slice(0, 10));
+};
+$("#todayTaskDate").onclick = () => switchTaskDate(key());
+setInterval(() => {
+  if (d.activeDate !== key()) switchTaskDate(key());
+}, 30000);
+function scheduleStreakDeadlineRefresh() {
+  let now = new Date(),
+    next = new Date();
+  next.setHours(3, 0, 2, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  setTimeout(() => {
+    render();
+    scheduleStreakDeadlineRefresh();
+  }, next - now);
+}
+scheduleStreakDeadlineRefresh();
+const submitTaskForDate = $("#taskform").onsubmit;
+$("#taskform").onsubmit = (e) => {
+  submitTaskForDate(e);
+  let task = d.tasks.at(-1);
+  if (task) {
+    task.plannedFor = d.activeDate || key();
+    save();
+    refreshTaskDateControls();
+  }
+};
+refreshTaskDateControls();
+render();
+document.head.insertAdjacentHTML(
+  "beforeend",
+  "<style>.task-date-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:12px}.task-date-controls input{height:34px;border:1px solid #dce1ed;border-radius:9px;padding:0 8px;color:#202b4c;background:#fff;font:700 13px Inter,system-ui,sans-serif}.date-nav,.date-today{height:34px;border:1px solid #dce1ed;border-radius:9px;background:#fff;color:#34436c;font:800 15px Inter,system-ui,sans-serif;cursor:pointer}.date-nav{width:34px;font-size:24px;line-height:1}.date-today{padding:0 11px;font-size:12px}.date-nav:hover,.date-today:hover{border-color:#8779ec;color:#5d4fd0;background:#f6f4ff}@media(max-width:850px){.task-date-controls{margin-top:11px;gap:6px}.task-date-controls input{flex:1;min-width:142px;font-size:12px}.date-today{padding:0 9px}}</style>",
+);
+if ("serviceWorker" in navigator)
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
