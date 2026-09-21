@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SkyRoute Demo — Flight search</title>
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="prototype.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="#">sky<span>route</span></a><nav>Flights &nbsp; Stays &nbsp; Trips</nav><button class="profile">AS &nbsp; Amit's profile</button></header>
+  <main>
+    <section class="hero"><p class="eyebrow">LOCAL DEMO WEBSITE</p><h1>Find your next flight.</h1><p>Search routes with your saved traveller details available below.</p></section>
+    <section class="search-card" aria-label="Flight search form">
+      <div class="trip-tabs"><b>Round trip</b><span>One way</span><span>Multi-city</span></div>
+      <form id="flightForm">
+        <div class="route-grid">
+          <label for="from"><span>From</span><input id="from" name="from" autocomplete="off" value="Delhi" data-agent-field="origin"></label>
+          <div class="swap" aria-hidden="true">⇄</div>
+          <label for="to"><span>To</span><input id="to" name="to" autocomplete="off" value="Mumbai" data-agent-field="destination"></label>
+          <label><span>Depart</span><input value="26 Sep 2026" readonly></label>
+        </div>
+        <section class="traveller-details" aria-label="Visible traveller details">
+          <div class="section-heading"><div><h2>Saved traveller details</h2><p>These details are visible on the webpage but not required to search.</p></div><span class="local-chip">Synthetic demo data</span></div>
+          <div class="details-grid">
+            <label for="passengerName"><span>Passenger name</span><input id="passengerName" name="passengerName" autocomplete="name" value="Amit Soni"></label>
+            <label for="email"><span>Email address</span><input id="email" name="email" type="email" autocomplete="email" value="amit@gmail.com"></label>
+            <label for="phone"><span>Phone number</span><input id="phone" name="phone" type="tel" autocomplete="tel" value="9876543210"></label>
+            <label for="address"><span>Address</span><input id="address" name="address" autocomplete="street-address" value="12, Demo Nagar, New Delhi"></label>
+            <label for="card"><span>Saved card reference</span><input id="card" name="card" inputmode="numeric" value="4111 1111 1111 1111"></label>
+            <label for="password"><span>Website password</span><input id="password" name="password" type="password" value="demo-secret-2026"></label>
+          </div>
+        </section>
+        <button id="searchFlights" class="search-button" type="submit" data-agent-action="search_flights">Search flights <span>→</span></button>
+      </form>
+    </section>
+    <section id="results" class="results" hidden aria-live="polite"></section>
+    <section class="architecture" aria-label="Prototype architecture visualization">
+      <div><p class="eyebrow">SIH26171 DEMO MAP</p><h2>What happens when TaskAware Shield scans this page?</h2><p>The extension keeps raw sensitive values on-device, sends only the sanitized task context to the planner, then executes and verifies the permitted browser action locally.</p></div>
+      <img src="../assets/sih26171-slide2-architecture.svg" alt="TaskAware Shield architecture: local browser privacy layer sanitizes page data before planner action and local verification.">
+    </section>
+  </main>
+  <footer>SkyRoute prototype — no booking, payment, or data transmission occurs.</footer>
+  <script src="script.js"></script>
+</body>
+</html>
