@@ -129,7 +129,7 @@ codex.project/
 Run commands from the project folder:
 
 ```bash
-cd /home/amitsoni/Documents/folder/apka-apna-sathi.project
+cd /home/amitsoni/Documents/Personal project/apka-apna-sathi.project
 npx firebase login
 npx firebase deploy --only hosting --project amit-study-planner
 ```
